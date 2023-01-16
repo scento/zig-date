@@ -83,7 +83,7 @@ pub const Time = packed struct {
     }
 };
 
-test "unit:from_hms" {
+test "unit:Time:from_hms" {
     try testing.expectEqual(Time{ .base = 0, .frac = 0 }, try Time.from_hms(0, 0, 0));
     try testing.expectEqual(Time{ .base = 86399, .frac = 0 }, try Time.from_hms(23, 59, 59));
     try testing.expectError(TimeError.InvalidArgument, Time.from_hms(24, 0, 0));
@@ -91,7 +91,7 @@ test "unit:from_hms" {
     try testing.expectError(TimeError.InvalidArgument, Time.from_hms(23, 59, 60));
 }
 
-test "unit:from_hms_milli" {
+test "unit:Time:from_hms_milli" {
     const expectOne = Time{ .base = 0, .frac = 0 };
     const expectTwo = Time{ .base = 86399, .frac = 999000000 };
     const expectThree = Time{ .base = 86399, .frac = 1999000000 };
@@ -108,7 +108,7 @@ test "unit:from_hms_milli" {
     try testing.expectError(TimeError.InvalidArgument, inNine);
 }
 
-test "unit:from_hms_micro" {
+test "unit:Time:from_hms_micro" {
     const expectOne = Time{ .base = 0, .frac = 0 };
     const expectTwo = Time{ .base = 86399, .frac = 999999000 };
     const expectThree = Time{ .base = 86399, .frac = 1999999000 };
@@ -125,7 +125,7 @@ test "unit:from_hms_micro" {
     try testing.expectError(TimeError.InvalidArgument, inNine);
 }
 
-test "unit:from_hms_nano" {
+test "unit:Time:from_hms_nano" {
     const expectOne = Time{ .base = 0, .frac = 0 };
     const expectTwo = Time{ .base = 86399, .frac = 999999999 };
     const expectThree = Time{ .base = 86399, .frac = 1999999999 };
@@ -140,7 +140,7 @@ test "unit:from_hms_nano" {
     try testing.expectError(TimeError.InvalidArgument, inEight);
 }
 
-test "unit:from_num_seconds_from_midnight" {
+test "unit:Time:from_num_seconds_from_midnight" {
     const expectOne = Time{ .base = 0, .frac = 0 };
     const expectTwo = Time{ .base = 86399, .frac = 999999999 };
     const expectThree = Time{ .base = 86399, .frac = 1999999999 };
@@ -154,35 +154,35 @@ test "unit:from_num_seconds_from_midnight" {
     try testing.expectError(TimeError.InvalidArgument, inFive);
 }
 
-test "unit:hour" {
+test "unit:Time:hour" {
     const baseOne = Time{ .base = 0, .frac = 0 };
     const baseTwo = Time{ .base = 86399, .frac = 999999999 };
     try testing.expectEqual(baseOne.hour(), 0);
     try testing.expectEqual(baseTwo.hour(), 23);
 }
 
-test "unit:minute" {
+test "unit:Time:minute" {
     const baseOne = Time{ .base = 0, .frac = 0 };
     const baseTwo = Time{ .base = 86399, .frac = 999999999 };
     try testing.expectEqual(baseOne.minute(), 0);
     try testing.expectEqual(baseTwo.minute(), 59);
 }
 
-test "unit:second" {
+test "unit:Time:second" {
     const baseOne = Time{ .base = 0, .frac = 0 };
     const baseTwo = Time{ .base = 86399, .frac = 999999999 };
     try testing.expectEqual(baseOne.second(), 0);
     try testing.expectEqual(baseTwo.second(), 59);
 }
 
-test "unit:nanosecond" {
+test "unit:Time:nanosecond" {
     const baseOne = Time{ .base = 0, .frac = 0 };
     const baseTwo = Time{ .base = 86399, .frac = 999999999 };
     try testing.expectEqual(baseOne.nanosecond(), 0);
     try testing.expectEqual(baseTwo.nanosecond(), 999999999);
 }
 
-test "unit:num_seconds_from_midnight" {
+test "unit:Time:num_seconds_from_midnight" {
     const baseOne = Time{ .base = 0, .frac = 0 };
     const baseTwo = Time{ .base = 86399, .frac = 999999999 };
     try testing.expectEqual(baseOne.num_seconds_from_midnight(), 0);

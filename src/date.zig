@@ -57,13 +57,13 @@ const DominicalLetter = enum(u4) {
     };
 
     /// from_year converts a year number into a DominicalLetter.
-    pub fn from_year(year: i32) DominicalLetter {
+    fn from_year(year: i32) DominicalLetter {
         const ymod: usize = @bitCast(u32, @mod(year, 400));
         return YearToLetter[ymod];
     }
 
     /// ndays returns the number of days in the year.
-    pub fn ndays(self: DominicalLetter) u32 {
+    fn ndays(self: DominicalLetter) u32 {
         const common_year = @enumToInt(self);
         return 366 - @as(u32, common_year >> 3);
     }

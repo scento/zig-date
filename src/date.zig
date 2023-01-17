@@ -5,94 +5,80 @@ const DateError = error{
     InvalidArgument,
 };
 
-/// The day of week.
-const Weekday = enum(u3) {
-    Mon = 7,
-    Tue = 1,
-    Wed = 2,
-    Thu = 3,
-    Fri = 4,
-    Sat = 5,
-    Sun = 6,
+/// DominicalLetter classifies each year of the Gregorian calendar into
+/// 10 classes: common and leap years starting with Monday through Sunday.
+/// Each letter is encoded in four bits `abbb`, where `a` is `1` for the
+/// common year and `bbb` is a non-zero `Weekday` mapping `Mon` to 7 of
+/// the last day in the past year.
+const DominicalLetter = enum(u4) {
+    A = 0o15,
+    AG = 0o05,
+    B = 0o14,
+    BA = 0o04,
+    C = 0o13,
+    CB = 0o03,
+    D = 0o12,
+    DC = 0o02,
+    E = 0o11,
+    ED = 0o01,
+    F = 0o17,
+    FE = 0o07,
+    G = 0o16,
+    GF = 0o06,
 
-    /// succ returns the next day in the week.
-    pub inline fn succ(self: Weekday) Weekday {
-        return switch (self) {
-            .Mon => .Tue,
-            .Tue => .Wed,
-            .Wed => .Thu,
-            .Thu => .Fri,
-            .Fri => .Sat,
-            .Sat => .Sun,
-            .Sun => .Mon,
-        };
+    const YearToLetter = [400]DominicalLetter{
+        .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,
+        .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,
+        .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB,
+        .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,  .F,  .E,
+        .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,  .G,
+        .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,  .F,  .E,  .DC, .B,
+        .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,  .C,  .B,  .A,  .G,  .FE,
+        .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,
+        .GF, .E,  .D,  .C,  .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,
+        .B,  .AG, .F,  .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,
+        .D,  .C,  .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG,
+        .F,  .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,
+        .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,
+        .D,  .CB, .A,  .G,  .F,  .E,  .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,
+        .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,  .F,  .E,  .DC,
+        .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,  .G,  .F,
+        .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,  .F,  .E,  .DC, .B,  .A,
+        .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,
+        .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE,
+        .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,
+        .G,  .F,  .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,
+        .C,  .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,
+        .E,  .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA,
+        .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,
+        .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,  .F,
+        .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,  .D,  .CB, .A,
+        .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,
+    };
+
+    /// from_year converts a year number into a DominicalLetter.
+    pub fn from_year(year: i32) DominicalLetter {
+        const ymod: usize = @bitCast(u32, @mod(year, 400));
+        return YearToLetter[ymod];
     }
 
-    /// pred returns the previous day in the week.
-    pub inline fn pred(self: Weekday) Weekday {
-        return switch (self) {
-            .Mon => .Sun,
-            .Tue => .Mon,
-            .Wed => .Tue,
-            .Thu => .Wed,
-            .Fri => .Thu,
-            .Sat => .Fri,
-            .Sun => .Sat,
-        };
-    }
-
-    /// number_from_monday returns a day-of-week number starting from Monday = 1.
-    /// (ISO 8601 weekday number)
-    pub inline fn number_from_monday(self: Weekday) u8 {
-        const v = [7]u8{ 2, 3, 4, 5, 6, 7, 1 };
-        return v[@enumToInt(self) - 1];
-    }
-
-    /// number_from_sunday returns a day-of-week number starting from Sunday = 1.
-    pub inline fn number_from_sunday(self: Weekday) u8 {
-        const v = [7]u8{ 3, 4, 5, 6, 7, 1, 2 };
-        return v[@enumToInt(self) - 1];
-    }
-
-    /// num_days_from_monday a day-of-week number starting from Monday = 0.
-    pub inline fn num_days_from_monday(self: Weekday) u8 {
-        const v = [7]u8{ 1, 2, 3, 4, 5, 6, 0 };
-        return v[@enumToInt(self) - 1];
-    }
-
-    /// num_days_from_sunday a day-of-week number starting from Sunday = 0.
-    pub inline fn num_days_from_sunday(self: Weekday) u8 {
-        const v = [7]u8{ 2, 3, 4, 5, 6, 0, 1 };
-        return v[@enumToInt(self) - 1];
+    /// ndays returns the number of days in the year.
+    pub fn ndays(self: DominicalLetter) u32 {
+        const common_year = @enumToInt(self);
+        return 366 - @as(u32, common_year >> 3);
     }
 };
 
-test "unit:Weekday:succ" {
-    try testing.expectEqual(Weekday.Tue, Weekday.Mon.succ());
-    try testing.expectEqual(Weekday.Mon, Weekday.Sun.succ());
-}
-
-test "unit:Weekday:pred" {
-    try testing.expectEqual(Weekday.Sat, Weekday.Sun.pred());
-    try testing.expectEqual(Weekday.Sun, Weekday.Mon.pred());
-}
-
-test "unit:Weekday:number_from_monday" {
-    try testing.expectEqual(1, Weekday.Mon.number_from_monday());
-    try testing.expectEqual(7, Weekday.Sun.number_from_monday());
-}
-
-test "unit:Weekday:number_from_sunday" {
-    try testing.expectEqual(2, Weekday.Mon.number_from_sunday());
-    try testing.expectEqual(1, Weekday.Sun.number_from_sunday());
-}
-
-test "unit:Weekday:num_days_from_monday" {
-    try testing.expectEqual(0, Weekday.Mon.num_days_from_monday());
-    try testing.expectEqual(6, Weekday.Sun.num_days_from_monday());
-}
-
-test "unit:Weekday:num_days_from_sunday" {
-    try testing.expectEqual(1, Weekday.Mon.num_days_from_sunday());
-    try testing.expectEqual(0, Weekday.Sun.num_days_from_sunday());
+test "unit:DominicalLetter:ndays" {
+    try testing.expectEqual(365, comptime DominicalLetter.from_year(2014).ndays());
+    try testing.expectEqual(366, comptime DominicalLetter.from_year(2012).ndays());
+    try testing.expectEqual(366, comptime DominicalLetter.from_year(2000).ndays());
+    try testing.expectEqual(365, comptime DominicalLetter.from_year(1900).ndays());
+    try testing.expectEqual(366, comptime DominicalLetter.from_year(0).ndays());
+    try testing.expectEqual(365, comptime DominicalLetter.from_year(-1).ndays());
+    try testing.expectEqual(366, comptime DominicalLetter.from_year(-4).ndays());
+    try testing.expectEqual(365, comptime DominicalLetter.from_year(-99).ndays());
+    try testing.expectEqual(365, comptime DominicalLetter.from_year(-100).ndays());
+    try testing.expectEqual(365, comptime DominicalLetter.from_year(-399).ndays());
+    try testing.expectEqual(366, comptime DominicalLetter.from_year(-400).ndays());
 }

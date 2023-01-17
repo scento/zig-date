@@ -43,55 +43,27 @@ const Weekday = enum(u3) {
 
     /// number_from_monday returns a day-of-week number starting from Monday = 1.
     /// (ISO 8601 weekday number)
-    pub inline fn number_from_monday(self: Weekday) u3 {
-        return switch (self) {
-            .Mon => 1,
-            .Tue => 2,
-            .Wed => 3,
-            .Thu => 4,
-            .Fri => 5,
-            .Sat => 6,
-            .Sun => 7,
-        };
+    pub inline fn number_from_monday(self: Weekday) u8 {
+        const v = [7]u8{ 2, 3, 4, 5, 6, 7, 1 };
+        return v[@enumToInt(self) - 1];
     }
 
     /// number_from_sunday returns a day-of-week number starting from Sunday = 1.
-    pub inline fn number_from_sunday(self: Weekday) u3 {
-        return switch (self) {
-            .Mon => 2,
-            .Tue => 3,
-            .Wed => 4,
-            .Thu => 5,
-            .Fri => 6,
-            .Sat => 7,
-            .Sun => 1,
-        };
+    pub inline fn number_from_sunday(self: Weekday) u8 {
+        const v = [7]u8{ 3, 4, 5, 6, 7, 1, 2 };
+        return v[@enumToInt(self) - 1];
     }
 
-    /// num_days_from_monday returns a day-of-week number starting from Monday = 0.
-    pub inline fn num_days_from_monday(self: Weekday) u3 {
-        return switch (self) {
-            .Mon => 0,
-            .Tue => 1,
-            .Wed => 2,
-            .Thu => 3,
-            .Fri => 4,
-            .Sat => 5,
-            .Sun => 6,
-        };
+    /// num_days_from_monday a day-of-week number starting from Monday = 0.
+    pub inline fn num_days_from_monday(self: Weekday) u8 {
+        const v = [7]u8{ 1, 2, 3, 4, 5, 6, 0 };
+        return v[@enumToInt(self) - 1];
     }
 
-    /// num_days_from_sunday returns a day-of-week number starting from Sunday = 0.
-    pub inline fn num_days_from_sunday(self: Weekday) u3 {
-        return switch (self) {
-            .Mon => 1,
-            .Tue => 2,
-            .Wed => 3,
-            .Thu => 4,
-            .Fri => 5,
-            .Sat => 6,
-            .Sun => 0,
-        };
+    /// num_days_from_sunday a day-of-week number starting from Sunday = 0.
+    pub inline fn num_days_from_sunday(self: Weekday) u8 {
+        const v = [7]u8{ 2, 3, 4, 5, 6, 0, 1 };
+        return v[@enumToInt(self) - 1];
     }
 };
 
@@ -115,12 +87,12 @@ test "unit:Weekday:number_from_sunday" {
     try testing.expectEqual(1, Weekday.Sun.number_from_sunday());
 }
 
-test "unit:Weekday:number_from_monday" {
+test "unit:Weekday:num_days_from_monday" {
     try testing.expectEqual(0, Weekday.Mon.num_days_from_monday());
     try testing.expectEqual(6, Weekday.Sun.num_days_from_monday());
 }
 
-test "unit:Weekday:number_from_sunday" {
+test "unit:Weekday:num_days_from_sunday" {
     try testing.expectEqual(1, Weekday.Mon.num_days_from_sunday());
     try testing.expectEqual(0, Weekday.Sun.num_days_from_sunday());
 }

@@ -1,6 +1,8 @@
+const builtin = @import("builtin");
 const std = @import("std");
 const testing = std.testing;
 
+// DateError enumerates possible Date-related errors.
 const DateError = error{
     InvalidArgument,
 };
@@ -26,6 +28,7 @@ const Letter = enum(u4) {
     G = 0o16,
     GF = 0o06,
 
+    /// YearToLetter is the 400-years repeating pattern of dominical letters.
     const YearToLetter = [400]Letter{
         .BA, .G,  .F,  .E,  .DC, .B,  .A,  .G,  .FE, .D,  .C,  .B,  .AG, .F,  .E,
         .D,  .CB, .A,  .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,  .BA, .G,
@@ -56,6 +59,65 @@ const Letter = enum(u4) {
         .G,  .F,  .ED, .C,  .B,  .A,  .GF, .E,  .D,  .C,
     };
 
+    const MdlToOl = [_]u8{
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 64,  64,  64,  64,  64,  64,  64,  64,  64,
+        64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,
+        64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,
+        64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,  64,
+        64,  64,  64,  64,  64,  64,  64,  64,  255, 255, 66,  66,  66,  66,  66,
+        66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,
+        66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,
+        66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,  66,
+        66,  66,  66,  66,  66,  66,  66,  255, 255, 255, 255, 255, 255, 255, 72,
+        74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,
+        72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,
+        74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,
+        72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,  74,  72,
+        74,  255, 255, 74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,
+        74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,
+        76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,
+        74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,  76,  74,
+        76,  74,  76,  255, 255, 255, 255, 78,  80,  78,  80,  78,  80,  78,  80,
+        78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,
+        80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,
+        78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,  80,  78,
+        80,  78,  80,  78,  80,  78,  80,  78,  80,  255, 255, 80,  82,  80,  82,
+        80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,
+        82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,
+        80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  80,
+        82,  80,  82,  80,  82,  80,  82,  80,  82,  80,  82,  255, 255, 255, 255,
+        84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,
+        86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,
+        84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,
+        86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,  84,  86,
+        84,  86,  255, 255, 86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,
+        88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,
+        86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,
+        88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,  86,  88,
+        86,  88,  86,  88,  86,  88,  255, 255, 88,  90,  88,  90,  88,  90,  88,
+        90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,
+        88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,
+        90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,  88,  90,
+        88,  90,  88,  90,  88,  90,  88,  90,  255, 255, 255, 255, 92,  94,  92,
+        94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,
+        92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,
+        94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,
+        92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  92,  94,  255,
+        255, 94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,
+        94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,
+        96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,
+        94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,  96,  94,
+        96,  255, 255, 255, 255, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100,
+        98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,
+        100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100,
+        98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,  100, 98,
+        100, 98,  100, 98,  100, 98,  100,
+    };
+
     /// from_year converts a year number into a Letter.
     fn from_year(year: i32) Letter {
         const ymod: usize = @bitCast(u32, @mod(year, 400));
@@ -64,60 +126,33 @@ const Letter = enum(u4) {
 
     /// ndays returns the number of days in the year.
     fn ndays(self: Letter) u32 {
+        comptime if (builtin.target.cpu.arch.endian() != .Little) {
+            @compileError("Date bit arithmetic requires little-endian architecture");
+        };
         const ltr = @enumToInt(self);
         return 366 - @as(u32, ltr >> 3);
     }
 
-    /// doy_from_md returns the day of year from the month and day of month.
-    fn doy_from_md(self: Letter, month: u32, day: u32) u32 {
-        const ltr = @enumToInt(self);
-        const leap_year = @as(u32, ltr >> 3);
-
-        // lookup map for the ordinal date offset
-        const index = ((month - 1) << 6 | (day - 1) << 1 | leap_year << 9);
-
-        const IndexToOrdinalOffset = [766]u32{
-            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-            0,   0,   0,   31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,
-            31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  -1,  -1,  31,  31,  31,  31,  31,
-            31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,  31,
-            59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,  60,  59,
-            60,  59,  60,  59,  60,  59,  60,  -1,  -1,  -1,  -1,  -1,  -1,  59,  60,  59,  60,  59,  60,  90,  91,  90,  91,
-            90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,
-            91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,  90,  91,
-            90,  91,  -1,  91,  90,  91,  -1,  -1,  90,  91,  90,  91,  90,  91,  90,  91,  120, 121, 120, 121, 120, 121, 120,
-            121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121,
-            120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 120, 121, -1,
-            -1,  -1,  -1,  120, 121, 120, 121, 120, 121, 120, 121, 120, 121, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152,
-            151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151,
-            152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 151, 152, -1,  -1,  151, 152,
-            151, 152, 151, 152, 151, 152, 151, 152, 151, 152, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181,
-            182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182,
-            181, 182, 181, 182, 181, 182, 181, 182, 181, 182, 181, 182, -1,  -1,  -1,  -1,  181, 182, 181, 182, 181, 182, 181,
-            182, 181, 182, 181, 182, 181, 182, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213,
-            212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212,
-            213, 212, 213, 212, 213, 212, 213, 212, 213, -1,  -1,  212, 213, 212, 213, 212, 213, 212, 213, 212, 213, 212, 213,
-            212, 213, 212, 213, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243,
-            244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244,
-            243, 244, 243, 244, -1,  -1,  243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243, 244, 243,
-            244, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274,
-            273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, -1,  -1,  -1,
-            -1,  273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 273, 274, 304, 305,
-            304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304,
-            305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, -1,  -1,  304, 305, 304, 305,
-            304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 304, 305, 334, 335, 334, 335, 334,
-            335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335,
-            334, 335, 334, 335, 334, 335, 334, 335, 334, 335, -1,  -1,  -1,  -1,  334, 335, 334, 335, 334, 335, 334, 335, 334,
-            335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 334, 335, 0,   0,   0,   0,   0,   0,   0,   0,
-            0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-            0,   0,   0,   0,   0,   0,   0,
+    /// dm_to_doy translates day and month to the day of year.
+    fn dm_to_doy(self: Letter, day: u5, month: u4) DateError!u9 {
+        comptime if (builtin.target.cpu.arch.endian() != .Little) {
+            @compileError("Date bit arithmetic requires little-endian architecture");
         };
+        const ltr = @enumToInt(self);
+        const leap = @as(u32, ltr >> 3);
+        const index = (@as(u32, month) << 6) | (@as(u32, day) << 1) | (@as(u32, leap));
 
-        return IndexToOrdinalOffset[index] + day;
+        if (index > MdlToOl.len) {
+            return DateError.InvalidArgument;
+        }
+
+        const doy = @truncate(u9, (index -% (@as(u32, MdlToOl[index]) & 0x3ff)) >> 1);
+        if (doy > 365) {
+            return DateError.InvalidArgument;
+        }
+
+        return doy;
     }
-
-    // md_from_doy returns the month and day of month from the day of year.
-    //fn md_from_doy(self: Letter, doy: u32) struct { u32, u32 } {}
 };
 
 test "unit:Letter:ndays" {
@@ -134,29 +169,52 @@ test "unit:Letter:ndays" {
     try testing.expectEqual(366, comptime Letter.from_year(-400).ndays());
 }
 
-test "unit:Letter:doy_from_md" {
-    try testing.expectEqual(1, comptime Letter.from_year(2014).doy_from_md(1, 1));
-    try testing.expectEqual(2, comptime Letter.from_year(2014).doy_from_md(1, 2));
-    try testing.expectEqual(32, comptime Letter.from_year(2014).doy_from_md(2, 1));
+test "unit:Letter:dm_to_doy" {
+    try testing.expectEqual(61, comptime (try Letter.from_year(2018).dm_to_doy(2, 3)));
+    try testing.expectEqual(1, comptime (try Letter.from_year(2023).dm_to_doy(1, 1)));
+    try testing.expectEqual(2, comptime (try Letter.from_year(2023).dm_to_doy(2, 1)));
+    try testing.expectEqual(45, comptime (try Letter.from_year(2015).dm_to_doy(14, 2)));
+    try testing.expectError(DateError.InvalidArgument, Letter.from_year(2012).dm_to_doy(0, 1));
+    try testing.expectError(DateError.InvalidArgument, Letter.from_year(2015).dm_to_doy(29, 2));
 }
 
-/// ISO 8601 date consisting of the year, ordinal date and dominical letter.
-const Date = packed struct {
+/// ISO 8601 date consisting of year, ordinal date and domicial letter.
+pub const Date = packed struct {
     year: i19,
     doy: u9,
     letter: Letter,
 
-    /// from_ymd makes a new Date from the calendar date (year, month and day).
-    pub fn from_ymd(year: i19, month: u32, day: u32) DateError!Date {
+    /// from_yo makes a new Date from the ordinal date (year and day of year).
+    pub fn from_yo(year: i19, doy: u9) DateError!Date {
         const letter = Letter.from_year(year);
-        const doy = letter.doy_from_md(month, day);
+        if (doy < 1 or doy > letter.ndays()) {
+            return DateError.InvalidArgument;
+        }
 
-        return Date{ year, doy, letter };
+        return .{ .year = year, .doy = doy, .letter = letter };
     }
 
-    /// from_yo makes a new Date from the ordinal date (year and day of year).
-    pub fn from_yo(year: i19, doy: u32) DateError!Date {
+    /// from_ymd makes a new Date from the calendar date (year, month and day).
+    pub fn from_ymd(year: i19, month: u4, day: u5) DateError!Date {
         const letter = Letter.from_year(year);
-        return Date{ year, doy, letter };
+        const doy = letter.dm_to_doy(day, month) catch |err| return err;
+
+        return .{ .year = year, .doy = doy, .letter = letter };
     }
 };
+
+test "unit:Date:from_yo" {
+    try testing.expectEqual(Letter.D, comptime (try Date.from_yo(2015, 100)).letter);
+    try testing.expectError(DateError.InvalidArgument, Date.from_yo(2015, 0));
+    try testing.expectEqual(2015, comptime (try Date.from_yo(2015, 365)).year);
+    try testing.expectError(DateError.InvalidArgument, Date.from_yo(2015, 366));
+    try testing.expectEqual(366, comptime (try Date.from_yo(-4, 366)).doy);
+}
+
+test "unit:Date:from_ymd" {
+    try testing.expectEqual(61, comptime (try Date.from_ymd(2018, 3, 2)).doy);
+    try testing.expectEqual(45, comptime (try Date.from_ymd(2015, 2, 14)).doy);
+    try testing.expectError(DateError.InvalidArgument, Date.from_ymd(2012, 0, 3));
+    try testing.expectError(DateError.InvalidArgument, Date.from_ymd(2015, 2, 29));
+    try testing.expectEqual(60, comptime (try Date.from_ymd(-4, 2, 29)).doy);
+}
